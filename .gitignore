@@ -33,3 +33,7 @@ hf_cache/
 !notes/
 !**/*.md
 !**/*.py
+
+# MLX quantized export dirs (weights, not for git)
+*-4bit-g*/
+qwen2.5-*/

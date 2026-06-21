@@ -74,14 +74,19 @@ lost. 8-bit ≈ no change; good 4-bit ≈ +1–5%; a broken quant explodes (or g
 
 ## Results so far
 
-**Qwen2.5-0.5B-Instruct** (work horse), WikiText-2 perplexity:
+**Qwen2.5-0.5B-Instruct** (work horse), measured on an Apple M4. Perplexity on the **same MLX
+ruler** for both, so the difference is pure quantization cost:
 
-| precision | size on disk | perplexity | vs fp16 |
-|---|---|---|---|
-| fp16 (baseline) | 953 MB | **12.67** | — |
-| MLX 4-bit | 276 MB (**3.5× smaller**) | _Phase 2 (next)_ | |
+| precision | bits/wt | size | WikiText-2 PPL | mem (gen) | speed |
+|---|---|---|---|---|---|
+| fp16 (baseline) | 16 | 953 MB | 14.26 | 1.057 GB | 90 tok/s |
+| **MLX 4-bit (g64)** | 4.502 | **290 MB (3.3×↓)** | **17.09 (+19.8%)** | **0.323 GB (3.3×↓)** | **228 tok/s (2.5×↑)** |
 
-Live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
+**The honest takeaway:** naive round-to-nearest 4-bit on a *tiny* 0.5B model costs a real ~20%
+perplexity — yet it's 3.3× smaller, 2.5× faster, and still answers coherently. That quality gap
+is exactly what calibration (Phase 3) and GPTQ/AWQ (Phase 4) are built to win back. Big models
+lose far less. Full write-up: [`notes/02_mlx_quantization.md`](notes/02_mlx_quantization.md);
+live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
 
 ---
 
@@ -89,8 +94,8 @@ Live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
 
 - [x] **Phase 1 — Baseline.** Measure the *original* fp16 model's quality. You can't judge
   a shrunk model without the reference number. → PPL 12.67.
-- [ ] **Phase 2 — Local quantization (MLX / GGUF).** Make it ~3× smaller on Apple Silicon,
-  measure again, compare side by side. ← next
+- [x] **Phase 2 — Local quantization (MLX).** Quantized to 4-bit (3.3× smaller, 2.5× faster);
+  measured the real quality cost (+19.8% perplexity from naive RTN on a 0.5B). → `notes/02_mlx_quantization.md`
 - [ ] **Phase 3 — Calibration.** Why good 4-bit methods need a small "calibration" dataset.
 - [ ] **Phase 4 — Production CUDA methods.** bitsandbytes (NF4), GPTQ, AWQ on a GPU.
 - [ ] **Phase 5 — Rigorous evaluation.** KL-divergence, lm-eval task accuracy.

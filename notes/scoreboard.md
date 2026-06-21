@@ -1,20 +1,30 @@
 # Scoreboard
 
 Running record of every model/precision we measure. **The whole game: shrink the model
-(smaller size) while keeping perplexity close to the fp16 baseline.**
+(smaller, faster) while keeping perplexity close to the fp16 baseline.**
 
-> All perplexity = WikiText-2 (`Salesforce/wikitext`, raw, test split), sliding window
-> (max_len 2048, stride 1024), measured with `06_evaluation/perplexity.py`.
-> Compare only rows measured the **same way**.
+> Perplexity is only comparable within the **same ruler** (engine + windowing). We keep two
+> rulers below and never cross-compare them. Harnesses: `06_evaluation/perplexity.py` (HF,
+> overlapping sliding window) and `01_local_mlx/mlx_perplexity.py` (MLX, non-overlapping).
 
 ## Qwen2.5-0.5B-Instruct (work horse)
 
-| precision | size on disk | WikiText-2 PPL | Δ vs fp16 | tok/s | verdict |
-|---|---|---|---|---|---|
-| **fp16 (baseline)** | 953 MB | **12.67** (full test) | — | — | reference |
-| MLX 4-bit | 276 MB (**3.5× smaller**) | _Phase 2_ | _Phase 2_ | | |
+### MLX ruler — the apples-to-apples Phase 2 comparison
+| precision | bits/wt | size on disk | WikiText-2 PPL | Δ vs fp16 | peak mem (gen) | speed |
+|---|---|---|---|---|---|---|
+| **fp16 (baseline)** | 16 | 953 MB | **14.26** | — | 1.057 GB | 90 tok/s |
+| **MLX 4-bit (g64)** | 4.502 | 290 MB (**3.3×↓**) | **17.09** | **+19.8%** | 0.323 GB (**3.3×↓**) | 228 tok/s (**2.5×↑**) |
 
-## Notes
-- A quick run with `--max-tokens 20000` on the same fp16 model gives ~11.6 — a *subset*
-  number, not comparable to the full-test 12.67. Always match settings before comparing.
-- Bigger work horses (Qwen2.5-3B / 7B) to be added as later rows once downloaded — same pipeline.
+**Read:** naive round-to-nearest 4-bit on a tiny 0.5B model costs ~20% perplexity — real loss,
+the bar Phase 3 (calibration) / Phase 4 (GPTQ/AWQ) aim to beat. Generations still coherent;
+huge memory/speed win. Details: [`02_mlx_quantization.md`](02_mlx_quantization.md).
+
+### HF ruler — Phase 1 baseline only (different windowing, do NOT compare to MLX rows)
+| precision | size | WikiText-2 PPL |
+|---|---|---|
+| fp16 | 953 MB | 12.67 (full test, sliding window) |
+
+## Coming next
+- Phase 3: re-quantize this model with **calibration** → watch the +19.8% gap shrink.
+- Bigger work horses (Qwen2.5-3B / 7B) — same pipeline; expect a *much* smaller quality drop
+  (large models are far more quantization-robust).
