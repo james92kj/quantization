@@ -1,0 +1,35 @@
+# Never commit model weights or large artifacts
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+*.npz
+models/
+mlx_model*/
+*-4bit/
+*-8bit/
+*-gptq*/
+*-awq*/
+*.imatrix
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# HF / datasets caches if ever placed locally
+.cache/
+hf_cache/
+
+# Keep results/notes/scoreboards (small text) — they are the point of the repo
+!notes/
+!**/*.md
+!**/*.py
