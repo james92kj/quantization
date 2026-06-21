@@ -90,7 +90,7 @@ live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
 
 ---
 
-## Roadmap (one phase at a time)
+## Phases
 
 - [x] **Phase 1 — Baseline.** Measure the *original* fp16 model's quality. You can't judge
   a shrunk model without the reference number. → PPL 12.67.
@@ -101,7 +101,6 @@ live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
 - [ ] **Phase 5 — Rigorous evaluation.** KL-divergence, lm-eval task accuracy.
 - [ ] **Phase 6 — From scratch.** Implement int4/int8 quant by hand to own it.
 
-Full plan: [`00_roadmap/ROADMAP.md`](00_roadmap/ROADMAP.md).
 
 ---
 
