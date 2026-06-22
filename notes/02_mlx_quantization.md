@@ -6,9 +6,12 @@ quantization; Phases 3–4 exist to beat it.
 
 Work horse: **Qwen2.5-0.5B-Instruct**, on an Apple M4 (16 GB), via `mlx-lm`.
 
+> **Reproduce everything with one command:** `bash 01_local_mlx/reproduce_phase2.sh`
+> (installs deps, quantizes, measures perplexity for fp16 vs 4-bit, runs generations).
+
 ---
 
-## What we did
+## What we did (the exact commands)
 ```bash
 # 1. Quantize fp16 -> 4-bit, group-wise affine, group_size 64
 python -m mlx_lm convert --model Qwen/Qwen2.5-0.5B-Instruct -q --q-bits 4 --q-group-size 64 \

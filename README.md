@@ -106,12 +106,16 @@ live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
 
 ## Run it yourself
 
+Every phase ships a **one-command reproduce script** so you can replicate the exact results:
+
 ```bash
 pip install -U torch transformers datasets accelerate sentencepiece
 
 # Phase 1 — measure the fp16 baseline (Apple Silicon: --device mps; CUDA: --device cuda)
-cd 06_evaluation
-python perplexity.py --model Qwen/Qwen2.5-0.5B-Instruct --device mps
+cd 06_evaluation && python perplexity.py --model Qwen/Qwen2.5-0.5B-Instruct --device mps
+
+# Phase 2 — quantize to 4-bit + measure size, perplexity, generations (one command)
+bash 01_local_mlx/reproduce_phase2.sh
 ```
 
 ## Repo layout
