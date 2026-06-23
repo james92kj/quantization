@@ -27,10 +27,33 @@ real-world surprise that shaped how we run the calibration (imatrix) experiment.
    `BPW` = actual bits/weight. **If it's far above the nominal (Q4_K_M ≈ 4.85), read the warnings.**
 
 ## How to read `llama-perplexity` output
-- Splits the text into **512-token chunks**; prints a **running** perplexity `[n]value` after each
-  chunk (cumulative average — noisy early, converges later; the wobble is normal).
-- Final line: `Final estimate: PPL = 16.2043 +/- 0.12399` → the value over the whole set, with the
-  **standard error** (±). Differences smaller than the ± are not meaningful.
+
+The output looks like a wall of numbers but is simple. Example tail:
+```
+[1]10.12,[2]13.91,[3]14.28, ... [50]15.27, ... [582]16.19,[583]16.20,
+Final estimate: PPL = 16.2043 +/- 0.12399
+```
+
+- **It chops the text into 512-token chunks** (here ~583 of them) and processes them in order.
+- **Each `[n]value` is the RUNNING perplexity after chunk `n`** — a *cumulative* average over all
+  chunks seen so far, not the score of chunk `n` alone. So `[1]10.12` = after 1 chunk,
+  `[50]15.27` = after 50 chunks.
+- **Noisy early → converges late.** It swings (e.g. 10 → 18 → 15) as easy/hard passages come in,
+  then settles. The wobble is expected; only the converged tail matters. This is also why a
+  `--max-tokens`/few-chunk run gives a *different* number than the full run — fewer chunks = less
+  converged. Always compare runs with the **same** chunk count.
+- **The payoff line:** `Final estimate: PPL = 16.2043 +/- 0.12399`
+  - `16.2043` = perplexity over the **whole** test set (this is the number you record).
+  - `+/- 0.12399` = the **standard error** (statistical uncertainty). Anything inside
+    ~16.08–16.33 is "the same" to within noise.
+- **Comparing two models:** if their `value ± error` ranges **overlap**, the difference isn't
+  statistically meaningful — you need a gap bigger than the error bars to claim one is better.
+  (This is how we'll judge naive-Q4 vs imatrix-Q4: same ruler, look for a gap beyond ±.)
+
+### Extract just the number
+```bash
+llama-perplexity -m model.gguf -f wiki.test.raw -ngl 99 2>&1 | grep "Final estimate"
+```
 
 ---
 
