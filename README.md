@@ -1,4 +1,4 @@
-# Practical LLM Quantization — Learning by Doing
+# Practical LLM Quantization
 
 Take a real language model, **shrink it** (quantize it), and **prove the smaller version
 still answers well**. This repo is built **one phase at a time** — each phase is a real
@@ -127,19 +127,3 @@ bash 02_local_gguf/reproduce_phase3.sh
 ```
 
 Each script checks its prerequisites and points to `SETUP.md` if something's missing.
-
-## Repo layout
-
-```
-00_roadmap/        the full learning plan
-01_local_mlx/      Phase 2 — MLX (Apple-native) quantization
-02_local_gguf/     Phase 2 — llama.cpp / GGUF
-03_cuda_bnb/       Phase 4 — bitsandbytes (NF4 / int8)
-04_cuda_gptq_awq/  Phase 4 — GPTQ & AWQ
-05_calibration/    Phase 3 — calibration datasets
-06_evaluation/     quality measurement harness (perplexity, KL, generation)
-07_from_scratch/   Phase 6 — implement quantization by hand
-notes/             plain-language concept notes + the scoreboard
-```
-
-*Hardware used: Apple M4 (16 GB) for local phases; a single cloud GPU for the CUDA phases.*
