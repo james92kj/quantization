@@ -96,7 +96,8 @@ live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
   a shrunk model without the reference number. → PPL 12.67.
 - [x] **Phase 2 — Local quantization (MLX).** Quantized to 4-bit (3.3× smaller, 2.5× faster);
   measured the real quality cost (+19.8% perplexity from naive RTN on a 0.5B). → `notes/02_mlx_quantization.md`
-- [ ] **Phase 3 — Calibration.** Why good 4-bit methods need a small "calibration" dataset.
+- [x] **Phase 3 — Calibration (GGUF imatrix).** Controlled A/B on Qwen2.5-1.5B: imatrix lowered
+  perplexity 10.55→10.42 at *identical* 5.00 bpw / 1060 MiB — free quality. → `notes/04_calibration_imatrix.md`
 - [ ] **Phase 4 — Production CUDA methods.** bitsandbytes (NF4), GPTQ, AWQ on a GPU.
 - [ ] **Phase 5 — Rigorous evaluation.** KL-divergence, lm-eval task accuracy.
 - [ ] **Phase 6 — From scratch.** Implement int4/int8 quant by hand to own it.

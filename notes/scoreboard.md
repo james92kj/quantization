@@ -24,7 +24,21 @@ huge memory/speed win. Details: [`02_mlx_quantization.md`](02_mlx_quantization.m
 |---|---|---|
 | fp16 | 953 MB | 12.67 (full test, sliding window) |
 
+## Qwen2.5-1.5B-Instruct — Phase 3 calibration (GGUF, llama.cpp ruler)
+Controlled A/B: same `Q4_K_M`, same 5.00 bpw / 1060 MiB, toggling only the importance matrix.
+
+| Q4_K_M | WikiText-2 PPL | size | calibration |
+|---|---|---|---|
+| naive | 10.5501 ± 0.074 | 1060 MiB | none |
+| **+ imatrix** | **10.4191 ± 0.073** | 1060 MiB (same) | yes |
+| gain | **−0.131 (−1.24%)** | 0 | — |
+
+**Read:** calibration lowered perplexity at *identical* size — free quality from spending the same
+bits more wisely. Gain is modest at 5 bpw but grows sharply at lower bits. Details:
+[`04_calibration_imatrix.md`](04_calibration_imatrix.md). (0.5B was unusable here — hidden 896 not
+÷256 → legacy fallback that ignores the imatrix; see `03_gguf_output_and_imatrix_gotcha.md`.)
+
 ## Coming next
-- Phase 3: re-quantize this model with **calibration** → watch the +19.8% gap shrink.
-- Bigger work horses (Qwen2.5-3B / 7B) — same pipeline; expect a *much* smaller quality drop
-  (large models are far more quantization-robust).
+- Phase 4: **GPTQ / AWQ** on a CUDA GPU — calibration taken further (Hessian / activation-aware).
+- Bigger work horses (Qwen2.5-3B / 7B) — expect a *much* smaller quality drop (large models are
+  far more quantization-robust).
