@@ -37,3 +37,7 @@ hf_cache/
 # MLX quantized export dirs (weights, not for git)
 *-4bit-g*/
 qwen2.5-*/
+
+# local-only files (kept on disk, never pushed)
+*.local.md
+PHASES.local.md
