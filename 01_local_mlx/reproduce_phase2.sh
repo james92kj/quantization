@@ -9,6 +9,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# --- prerequisites (see ../SETUP.md) — needs Apple Silicon + mlx-lm ---
+python -c "import mlx.core" 2>/dev/null || { echo "ERROR: mlx not found (Apple Silicon only). See ../SETUP.md  (pip install mlx-lm)"; exit 1; }
+
 MODEL="Qwen/Qwen2.5-0.5B-Instruct"
 OUT="./qwen2.5-0.5b-4bit-g64"
 

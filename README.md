@@ -107,17 +107,26 @@ live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
 
 ## Run it yourself
 
-Every phase ships a **one-command reproduce script** so you can replicate the exact results:
+**Full setup + prerequisites: [`SETUP.md`](SETUP.md).** Every phase ships a self-contained
+**one-command reproduce script** (downloads its own model, builds its data, prints the numbers) so
+you can replicate every result with nothing missing:
 
 ```bash
-pip install -U torch transformers datasets accelerate sentencepiece
+# 0. one-time setup (Python pkgs + llama.cpp) — see SETUP.md for details
+#    pip install -U torch transformers datasets accelerate sentencepiece mlx-lm "huggingface_hub[cli]"
+#    brew install llama.cpp
 
-# Phase 1 — measure the fp16 baseline (Apple Silicon: --device mps; CUDA: --device cuda)
-cd 06_evaluation && python perplexity.py --model Qwen/Qwen2.5-0.5B-Instruct --device mps
+# 1. fp16 baseline perplexity
+bash 06_evaluation/reproduce_phase1.sh
 
-# Phase 2 — quantize to 4-bit + measure size, perplexity, generations (one command)
+# 2. MLX 4-bit quantization (size / perplexity / generation)
 bash 01_local_mlx/reproduce_phase2.sh
+
+# 3. calibration via GGUF imatrix (naive vs calibrated A/B)
+bash 02_local_gguf/reproduce_phase3.sh
 ```
+
+Each script checks its prerequisites and points to `SETUP.md` if something's missing.
 
 ## Repo layout
 

@@ -9,6 +9,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# --- prerequisites (see ../SETUP.md) ---
+command -v llama-quantize >/dev/null  || { echo "ERROR: llama.cpp not found. See ../SETUP.md  (brew install llama.cpp)"; exit 1; }
+command -v hf >/dev/null              || { echo "ERROR: hf CLI not found. See ../SETUP.md  (pip install 'huggingface_hub[cli]')"; exit 1; }
+python -c "import datasets" 2>/dev/null || { echo "ERROR: python 'datasets' missing. See ../SETUP.md"; exit 1; }
+
 FP16=qwen2.5-1.5b-instruct-fp16.gguf
 
 echo "### 0. fp16 GGUF (hidden 1536 = 6x256, so K-quants don't fall back)"
