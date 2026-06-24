@@ -48,24 +48,28 @@ chunks — exactly how the perplexity harness chunks the test set. Changed *only
 
 ## Results — Qwen2.5-1.5B-Instruct (HF ruler)
 
-| 4-bit method | calibration | PPL | Δ vs fp16 (8.6453) | size |
+| 4-bit method | calibration | actorder | PPL | Δ vs fp16 (8.6453) |
 |---|---|---|---|---|
-| NF4 (bnb) | none | **9.3078** | **+7.66%** | 1.153 GB (VRAM) |
-| GPTQ — bad calib (158-tok stubs) | broken | 11.9491 | +38.2% 🚩 | — |
-| **GPTQ — proper calib (2048-tok)** | 256 × 2048, WikiText train | **9.4401** | **+9.19%** | 1.625 GB (on-disk) |
+| NF4 (bnb) | none | — | 9.3078 | +7.66% |
+| GPTQ — bad calib (158-tok stubs) | broken | off | 11.9491 | +38.2% 🚩 |
+| GPTQ — proper calib (2048-tok) | 256 × 2048 | off | 9.4401 | +9.19% |
+| **GPTQ — proper calib + act-order** | 256 × 2048 | **on** | **9.0716** | **+4.93%** ✅ |
 
-**Two findings:**
-1. **Fixing the calibration recovered 11.95 → 9.44** — proof the stubs were the whole problem.
-2. **GPTQ still did NOT beat NF4** (+9.19% vs +7.66%). That's a *real* result, not a bug:
-   - NF4 is a strong baseline — a *nonuniform* float grid (vs GPTQ's *uniform* symmetric int4) with
-     block size **64** (vs GPTQ group **128**). Two structural advantages before calibration even matters.
-   - We left **`actorder` off** on purpose (to isolate the calibration fix). Activation ordering is
-     usually where GPTQ pulls ahead.
-   - Literature matches: at 4-bit on a *small* model, vanilla GPTQ ≈ NF4. GPTQ's clear wins are at
-     **3-bit, larger models, and with actorder**.
+**The full arc — each lever isolated (one variable at a time):**
+1. **Broken calibration → 11.95** (worse than no-calibration NF4). Stubby 158-tok sequences ruin the
+   Hessian. *Calibration data quality is everything.*
+2. **Fix calibration (2048-tok chunks) → 9.44** (ties NF4). The fix recovered 2.5 PPL.
+3. **Add act-order → 9.07 — GPTQ now BEATS NF4** (+4.93% vs +7.66%). Quantizing important columns
+   first, with the rest free to compensate their error, is what pulls GPTQ ahead.
 
-**Next experiment to actually settle it:** rerun GPTQ with `actorder=True` and `group_size=64`
-(match NF4's granularity), changing one lever at a time. That's the fair head-to-head.
+**Honest surprise (cuts the other way):** act-order bought **0.37 PPL** here — far more than the ~0.1
+the GPTQ authors saw on their 13B. On *this* small model act-order mattered MORE, not less, overshooting
+the informed prediction. (Real data > priors — exactly why we ran it.) Cost: eval 122 s vs 91 s — the
+column permutation slows inference, the documented act-order tradeoff, confirmed.
+
+**Conclusion:** calibration-free NF4 is a strong, zero-effort 4-bit baseline; GPTQ done *properly*
+(real calibration + act-order) beats it at the same bit-width — the payoff of spending compute to
+choose roundings that minimize output error.
 
 _(Runtime note: eval VRAM was 9.3 GB because, without fast kernels, compressed-tensors expands the
 4-bit weights to fp16 for the forward pass. The storage win is the 1.625 GB on-disk, not eval VRAM.)_

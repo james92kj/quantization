@@ -55,16 +55,18 @@ the same bit-width. Details: [`05_bnb_quantization.md`](05_bnb_quantization.md).
 ## Qwen2.5-1.5B-Instruct — Phase 4b GPTQ (CUDA L4, HF ruler)
 GPTQ W4A16 (group 128, no actorder) via llm-compressor. Calibrate on WikiText train, eval on test.
 
-| 4-bit method | calibration | PPL | Δ vs fp16 (8.6453) |
-|---|---|---|---|
-| NF4 (bnb, 4a) | none | **9.3078** | +7.66% |
-| GPTQ — broken calib (158-tok stubs) | bad | 11.9491 | +38.2% 🚩 |
-| GPTQ — proper calib (256 × 2048) | good | 9.4401 | +9.19% |
+| 4-bit method | calibration | actorder | PPL | Δ vs fp16 (8.6453) |
+|---|---|---|---|---|
+| NF4 (bnb, 4a) | none | — | 9.3078 | +7.66% |
+| GPTQ — broken calib (158-tok stubs) | bad | off | 11.9491 | +38.2% 🚩 |
+| GPTQ — proper calib (256 × 2048) | good | off | 9.4401 | +9.19% |
+| **GPTQ — proper calib + act-order** | good | **on** | **9.0716** | **+4.93%** ✅ |
 
-**Read:** (1) calibration data quality is everything — stubby sequences made GPTQ *worse* than
-no-calibration NF4; fixing to full 2048-tok chunks recovered 11.95→9.44. (2) Vanilla GPTQ still ≈ NF4
-(slightly behind) at 4-bit on a 1.5B — NF4 is a strong nonuniform/group-64 baseline; GPTQ needs
-`actorder`+finer groups (and lower bits / bigger models) to clearly win. Next: actorder experiment.
+**Read:** the arc, one lever at a time — (1) calibration data quality is everything: stubby sequences
+made GPTQ *worse* than no-calibration NF4 (11.95); (2) fixing to full 2048-tok chunks recovered to
+9.44 (≈NF4); (3) adding act-order → **9.07, GPTQ beats NF4** (+4.93% vs +7.66%). Calibration-free NF4
+is a strong zero-effort baseline; GPTQ done properly beats it at the same 4 bits. (Act-order bought
+0.37 PPL here — more than the literature's ~0.1 on a 13B; cost: slower inference.)
 Details: [`06_gptq.md`](06_gptq.md).
 
 ## Coming next
