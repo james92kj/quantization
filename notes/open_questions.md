@@ -88,3 +88,36 @@ Transformers at Scale" (arXiv 2208.07339).
 
 **Deliverable for the deep dive:** be able to draw the decomposition diagram from memory and explain,
 in one sentence each, *why lossless* and *why slow*. Possibly read the paper via the paper-reader.
+
+---
+
+## Q4. What are AWQ "mappings", and does every layer have one?
+
+**Context:** Phase 4c, running AWQ via llm-compressor. AWQModifier needs `mappings`; llm-compressor
+auto-resolves them for Qwen2 (Llama-like). Wanted to understand what they are. Paper: Lin et al.,
+2023, "AWQ: Activation-aware Weight Quantization" (arXiv 2306.00978).
+
+**Short answer.** AWQ protects salient weight channels by **scaling**: multiply a channel's weights by
+`s` and divide the activations feeding it by `s` — `(W·s)·(x/s) = W·x`, output unchanged, but weights
+land on a finer part of the 4-bit grid. The "divide activations by `s`" can't happen in mid-air — it's
+**pushed back into the module that produced those activations**. A **mapping** records that pairing:
+*"these linear layers get their input from that preceding module (which will absorb the scale)."*
+
+**Not per-layer — a few patterns that repeat every block.** For a Llama/Qwen block (~4 rules):
+| smooth (absorbs scale) | → balance (linears protected) |
+|---|---|
+| `input_layernorm` | `q_proj, k_proj, v_proj` |
+| `v_proj` | `o_proj` |
+| `post_attention_layernorm` | `gate_proj, up_proj` |
+| `up_proj` | `down_proj` |
+
+`q/k/v` are "smoothed together": same input → one shared scale vector. So a 28-layer model = these 4
+patterns × 28, not 28×7 independent choices. "Auto-resolves for Qwen2" = llm-compressor ships these
+patterns for Llama/Qwen-family models; a *novel* architecture would need hand-written mappings.
+
+*Analogy:* a mapping is a paired volume knob — turn the input to a group of layers down, you must turn
+the knob on whatever feeds it up by the same amount, or the music changes.
+
+**To explore later:** how AWQ *chooses* the scale per channel (grid search to minimize output error,
+using activation magnitude as the importance signal); contrast with SmoothQuant (same scaling trick,
+but to migrate *activation* outliers for W8A8, not to protect weights for W4).

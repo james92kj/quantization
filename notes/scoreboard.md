@@ -69,8 +69,23 @@ is a strong zero-effort baseline; GPTQ done properly beats it at the same 4 bits
 0.37 PPL here — more than the literature's ~0.1 on a 13B; cost: slower inference.)
 Details: [`06_gptq.md`](06_gptq.md).
 
+## Qwen2.5-1.5B-Instruct — Phase 4 MASTER TABLE (CUDA L4, HF ruler, fp16 = 8.6453)
+All 4-bit, same model, same HF ruler. Calibrated methods at 256×2048 (AWQ matched for fairness).
+
+| 4-bit method | calibration | PPL | Δ vs fp16 |
+|---|---|---|---|
+| **GPTQ + act-order** | 256×2048 | **9.0716** | **+4.93%** ← best |
+| NF4 (bnb) | none | 9.3078 | +7.66% |
+| GPTQ (no act-order) | 256×2048 | 9.4401 | +9.19% |
+| AWQ (W4A16 symmetric) | 256×2048 | 10.0046 | +15.7% |
+
+**Reads:** (1) GPTQ+act-order wins; calibration done properly beats calibration-free NF4 at 4 bits.
+(2) NF4 is a strong zero-effort baseline. (3) **AWQ is calibration-insensitive** — 128×512 and 256×2048
+gave *identical* 10.0046; its underperformance is the **symmetric W4A16 scheme**, not the data (original
+AWQ uses asymmetric — the isolated next experiment). Details: [`07_awq.md`](07_awq.md), full debugging
+trail in [`phase4-journey-and-failures.md`](phase4-journey-and-failures.md).
+
 ## Coming next
-- Phase 4b/4c: **GPTQ / AWQ** on a CUDA GPU — calibration taken further (Hessian / activation-aware);
-  beat NF4's +7.66% at the same 4 bits.
+- AWQ with an **asymmetric** 4-bit scheme (isolate the last confound), then Phase 5 (lm-eval + KL).
 - Bigger work horses (Qwen2.5-3B / 7B) — expect a *much* smaller quality drop (large models are
   far more quantization-robust).
