@@ -38,7 +38,37 @@ bits more wisely. Gain is modest at 5 bpw but grows sharply at lower bits. Detai
 [`04_calibration_imatrix.md`](04_calibration_imatrix.md). (0.5B was unusable here — hidden 896 not
 ÷256 → legacy fallback that ignores the imatrix; see `03_gguf_output_and_imatrix_gotcha.md`.)
 
+## Qwen2.5-1.5B-Instruct — Phase 4a bitsandbytes (CUDA L4, HF ruler)
+Calibration-free GPU quant. **HF ruler** (`06_evaluation/perplexity.py`) — NOT comparable to the
+llama.cpp rows above. fp16 baseline re-measured on this ruler = 8.6453.
+
+| mode | weights VRAM | vs fp16 | PPL | Δ vs fp16 | eval time |
+|---|---|---|---|---|---|
+| **fp16** | 3.088 GB | 1.0× | **8.6453** | — | 62 s |
+| **int8** (LLM.int8) | 1.845 GB | 1.67× | 8.6869 | **+0.48%** | 96 s (slower!) |
+| **nf4** (NF4 + dq) | 1.153 GB | **2.68×** | 9.3078 | **+7.66%** | 71 s |
+
+**Read:** 8-bit is near-free quality but buys *memory, not speed* (int8 ran slower). 4-bit NF4 is
+2.68× smaller for +7.66% PPL — the *calibration-free* 4-bit cost that GPTQ/AWQ (4b/4c) aim to beat at
+the same bit-width. Details: [`05_bnb_quantization.md`](05_bnb_quantization.md).
+
+## Qwen2.5-1.5B-Instruct — Phase 4b GPTQ (CUDA L4, HF ruler)
+GPTQ W4A16 (group 128, no actorder) via llm-compressor. Calibrate on WikiText train, eval on test.
+
+| 4-bit method | calibration | PPL | Δ vs fp16 (8.6453) |
+|---|---|---|---|
+| NF4 (bnb, 4a) | none | **9.3078** | +7.66% |
+| GPTQ — broken calib (158-tok stubs) | bad | 11.9491 | +38.2% 🚩 |
+| GPTQ — proper calib (256 × 2048) | good | 9.4401 | +9.19% |
+
+**Read:** (1) calibration data quality is everything — stubby sequences made GPTQ *worse* than
+no-calibration NF4; fixing to full 2048-tok chunks recovered 11.95→9.44. (2) Vanilla GPTQ still ≈ NF4
+(slightly behind) at 4-bit on a 1.5B — NF4 is a strong nonuniform/group-64 baseline; GPTQ needs
+`actorder`+finer groups (and lower bits / bigger models) to clearly win. Next: actorder experiment.
+Details: [`06_gptq.md`](06_gptq.md).
+
 ## Coming next
-- Phase 4: **GPTQ / AWQ** on a CUDA GPU — calibration taken further (Hessian / activation-aware).
+- Phase 4b/4c: **GPTQ / AWQ** on a CUDA GPU — calibration taken further (Hessian / activation-aware);
+  beat NF4's +7.66% at the same 4 bits.
 - Bigger work horses (Qwen2.5-3B / 7B) — expect a *much* smaller quality drop (large models are
   far more quantization-robust).
