@@ -40,6 +40,15 @@ define the mappings yourself — that's the one case where AWQ needs manual work
 must turn the knob on whatever feeds it up by the same amount, or the music changes. The mapping table
 says which knobs are wired together.
 
+## Real-world wrinkle seen in the run — "mapping 2/4: 27 skipped"
+
+When AWQ auto-resolved the 4 mappings on Qwen2.5-1.5B, mapping **2/4 (`v_proj → o_proj`)** reported
+**"27 skipped"** — i.e. it was applied to almost none of the 28 layers. Why: Qwen2.5 uses
+**grouped-query attention (GQA)** — far fewer K/V heads than Q heads — so `v_proj`'s output dimension
+doesn't line up with `o_proj`'s input grouping, and the scale can't be cleanly absorbed there. So the
+"4 clean patterns" meet messy architectural reality: one of them mostly no-ops on GQA models. Good
+reminder that the tidy table is the intent; the model's actual shapes decide what runs.
+
 ---
 
 ## My sub-questions (to ask later)

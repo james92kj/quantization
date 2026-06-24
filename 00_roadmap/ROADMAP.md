@@ -151,10 +151,10 @@ AQLM / extreme 2-bit. We'll point at papers as each becomes relevant.
 
 ## Progress tracker
 
-- [ ] Phase 0 — Environment
-- [ ] Phase 1 — fp16 baseline + PPL harness
-- [ ] Phase 2 — MLX + GGUF local quant, PPL-vs-bits curve
-- [ ] Phase 3 — Calibration set
-- [ ] Phase 4 — bnb / GPTQ / AWQ on CUDA
+- [x] Phase 0 — Environment
+- [x] Phase 1 — fp16 baseline + PPL harness
+- [x] Phase 2 — MLX + GGUF local quant, PPL-vs-bits curve
+- [x] Phase 3 — Calibration set (GGUF imatrix A/B)
+- [x] Phase 4 — bnb / GPTQ / AWQ on CUDA (L4) — master table in `notes/scoreboard.md`
 - [ ] Phase 5 — lm-eval + KL divergence
 - [ ] Phase 6 — From-scratch implementation
