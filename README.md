@@ -88,6 +88,29 @@ is exactly what calibration (Phase 3) and GPTQ/AWQ (Phase 4) are built to win ba
 lose far less. Full write-up: [`notes/02_mlx_quantization.md`](notes/02_mlx_quantization.md);
 live scoreboard: [`notes/scoreboard.md`](notes/scoreboard.md).
 
+### Phase 3 — calibration wins (Qwen2.5-1.5B, llama.cpp ruler)
+Controlled A/B, same `Q4_K_M`, same 5.00 bpw / 1060 MiB, toggling only the importance matrix:
+**naive 10.55 → +imatrix 10.42** (−1.24%) — free quality from spending the same bits more wisely.
+Write-up: [`notes/04_calibration_imatrix.md`](notes/04_calibration_imatrix.md).
+
+### Phase 4 — production 4-bit on a CUDA GPU (Qwen2.5-1.5B-Instruct, NVIDIA L4)
+Four methods, **same model, same HF ruler** (a *different* ruler from the MLX/llama.cpp rows above —
+never cross-compare). fp16 anchor = **8.6453**.
+
+| 4-bit method | calibration | WikiText-2 PPL | Δ vs fp16 |
+|---|---|---|---|
+| **GPTQ + activation-ordering** | 256×2048 | **9.07** | **+4.93%** ← best |
+| NF4 (bitsandbytes) | none | 9.31 | +7.66% |
+| GPTQ (no act-order) | 256×2048 | 9.44 | +9.19% |
+| AWQ (symmetric W4A16) | 256×2048 | 10.00 | +15.7% |
+
+**The honest takeaways:** 8-bit is near-lossless but buys *memory, not speed*; properly-calibrated
+GPTQ (with activation ordering) **beats** calibration-free NF4 at the same 4 bits; NF4 is a strong
+zero-effort baseline; AWQ is **calibration-insensitive** — its gap traces to the symmetric scheme, not
+the data. Write-ups: [`notes/05_bnb_quantization.md`](notes/05_bnb_quantization.md),
+[`06_gptq.md`](notes/06_gptq.md), [`07_awq.md`](notes/07_awq.md). The full debugging trail (6 failures
++ how each was diagnosed): [`notes/phase4-journey-and-failures.md`](notes/phase4-journey-and-failures.md).
+
 ---
 
 ## Run it yourself
